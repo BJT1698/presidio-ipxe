@@ -1,25 +1,8 @@
 #!ipxe
 cpuid --ext 29 && set arch x64 || set arch x86
 cpuid --ext 29 && set archl amd64 || set archl i386
-cpair --foreground 7 0
-echo -n W
-cpair --foreground 2 0
-echo -n e
-cpair --foreground 3 0
-echo -n l
-cpair --foreground 4 0
-echo -n c
-cpair --foreground 5 0
-echo -n o
-cpair --foreground 6 0
-echo -n m
-cpair --foreground 1 0
-echo -n e
-cpair --foreground 7 0
-echo !
 cpair --foreground 6 0
 echo
-
 echo ______iiii__PPPPPPPPPPPPPPPPP___XXXXXXX_______XXXXXXXEEEEEEEEEEEEEEEEEEEEEE____
 echo _____i::::i_P::::::::::::::::P__X:::::X_______X:::::XE::::::::::::::::::::E____
 echo ______iiii__P::::::PPPPPP:::::P_X:::::X_______X:::::XE::::::::::::::::::::E____
@@ -37,11 +20,8 @@ echo ____i::::::iP::::::::P__________X:::::X_______X:::::XE::::::::::::::::::::E
 echo ____i::::::iP::::::::P__________X:::::X_______X:::::XE::::::::::::::::::::E____
 echo ____iiiiiiiiPPPPPPPPPP__________XXXXXXX_______XXXXXXXEEEEEEEEEEEEEEEEEEEEEE____
 echo
-echo
-echo
-echo Configurazione della scheda di rete.. Gli E14 fanno schifo :( 
-echo Ci vorranno circa 40 secondi..
-sleep 40
+echo Configurazione della scheda di rete..  
+sleep 5 
 
 dhcp
 
@@ -56,9 +36,11 @@ set sp ${sp:string}
 menu Presidio Boot Server
 item --gap --            ---------------------------------------- Utility: -----------------------------------------
 	item acronis         ${space} Acronis True Image PE
+  item dellima         ${space} Dell Image Assist
 	item clonezilla      ${space} Clonezilla Live
-	item sergei	     ${space} Sergei Strelec Boot CD (Ignazio)	 
-	item netboot.xyz     ${space} Netboot.xyz (Varie Immagini Linux direttamente da internet)
+	item rescuezilla     ${space} Rescuezilla
+	item kali            ${space} Kali Linux
+  item sergei	     ${space} Sergei Strelec Boot CD (Ignazio)	 
 	item localboot	     ${space} Boot from local storage
 item --gap --            --------------------------------------------- Altro: --------------------------------------------
 	item view            ${space} Network setting
@@ -73,19 +55,33 @@ echo ${cls}
 goto start-menu
 
 :acronis
-sanboot --no-describe http://192.168.55.252/images/acronispe.iso || goto failed
+sanboot --no-describe http://192.168.55.252:9080/pxe-server/images/acronispe.iso || goto failed
+
+:dellima
+sanboot --no-describe http://192.168.55.252:9080/pxe-server/images/dellima.iso || goto failed
+
+:rescuezilla
+kernel http://192.168.55.252:9080/pxe-server/images/rescuezilla/vmlinuz
+initrd http://192.168.55.252:9080/pxe-server/images/rescuezilla/initrd.lz
+imgargs vmlinuz boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" keyboard-layouts= ocs_live_batch="no" locales=it_IT.UTF-8 vga=788 nosplash noprompt fetch=http://192.168.55.252:9080/pxe-server/images/rescuezilla/filesystem.squashfs
+boot
 
 :clonezilla
-kernel http://192.168.55.252/images/clonezilla/vmlinuz
-initrd http://192.168.55.252/images/clonezilla/initrd.img
-imgargs vmlinuz boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" keyboard-layouts= ocs_live_batch="no" locales=it_IT.UTF-8 vga=788 nosplash noprompt fetch=http://192.168.55.252/images/clonezilla/filesystem.squashfs
+kernel http://192.168.55.252:9080/pxe-server/images/clonezilla/vmlinuz
+initrd http://192.168.55.252:9080/pxe-server/images/clonezilla/initrd.img
+imgargs vmlinuz boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" keyboard-layouts= ocs_live_batch="no" locales=it_IT.UTF-8 vga=788 nosplash noprompt fetch=http://192.168.55.252:9080/pxe-server/images/clonezilla/filesystem.squashfs
+boot
+
+:kali
+kernel http://192.168.55.252:9080/pxe-server/images/kali/vmlinuz
+initrd http://192.168.55.252:9080/pxe-server/images/kali/initrd.img
+imgargs fetch=http://192.168.55.252:9080/pxe-server/images/kali/filesystem.squashfs
 boot
 
 :sergei
-sanboot --no-describe http://192.168.55.252/images/ignazio.iso || goto failed
-
-:xyz
-chain --autofree https://boot.netboot.xyz/ipxe/netboot.xyz.efi || goto failed
+kernel http://192.168.55.252/wimboot
+initrd http://192.168.55.252/pxe-server/images/strelec/SSTR/strelec11x64Eng.wim  strelec11x64Eng.wim  
+boot
 
 :view
 isset ${memsize} && echo ${manufacturer} | ${product} | ${platform} | ${arch} | ${memsize} MiB || echo ${manufacturer} | ${product} | ${platform} | ${arch}
