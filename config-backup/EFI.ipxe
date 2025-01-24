@@ -3,23 +3,13 @@ cpuid --ext 29 && set arch x64 || set arch x86
 cpuid --ext 29 && set archl amd64 || set archl i386
 cpair --foreground 6 0
 echo
-echo ______iiii__PPPPPPPPPPPPPPPPP___XXXXXXX_______XXXXXXXEEEEEEEEEEEEEEEEEEEEEE____
-echo _____i::::i_P::::::::::::::::P__X:::::X_______X:::::XE::::::::::::::::::::E____
-echo ______iiii__P::::::PPPPPP:::::P_X:::::X_______X:::::XE::::::::::::::::::::E____
-echo ____________PP:::::P_____P:::::PX::::::X_____X::::::XEE::::::EEEEEEEEE::::E____
-echo ____iiiiiii___P::::P_____P:::::PXXX:::::X___X:::::XXX__E:::::E_______EEEEEE____
-echo ____i:::::i___P::::P_____P:::::P___X:::::X_X:::::X_____E:::::E_________________
-echo _____i::::i___P::::PPPPPP:::::P_____X:::::X:::::X______E::::::EEEEEEEEEE_______
-echo _____i::::i___P:::::::::::::PP_______X:::::::::X_______E:::::::::::::::E_______
-echo _____i::::i___P::::PPPPPPPPP_________X:::::::::X_______E:::::::::::::::E_______
-echo _____i::::i___P::::P________________X:::::X:::::X______E::::::EEEEEEEEEE_______
-echo _____i::::i___P::::P_______________X:::::X_X:::::X_____E:::::E_________________
-echo _____i::::i___P::::P____________XXX:::::X___X:::::XXX__E:::::E_______EEEEEE____
-echo ____i::::::iPP::::::PP__________X::::::X_____X::::::XEE::::::EEEEEEEE:::::E____
-echo ____i::::::iP::::::::P__________X:::::X_______X:::::XE::::::::::::::::::::E____
-echo ____i::::::iP::::::::P__________X:::::X_______X:::::XE::::::::::::::::::::E____
-echo ____iiiiiiiiPPPPPPPPPP__________XXXXXXX_______XXXXXXXEEEEEEEEEEEEEEEEEEEEEE____
+echo Presidio's PXE Server 
 echo
+cpair --foreground 1 0
+echo !!!!!! RIATTIVATE SECURE BOOT ZIOPERA  !!!!!!
+echo
+echo
+sleep 3
 echo Configurazione della scheda di rete..  
 sleep 5 
 
@@ -35,12 +25,12 @@ set sp ${sp:string}
 
 menu Presidio Boot Server
 item --gap --            ---------------------------------------- Utility: -----------------------------------------
-	item acronis         ${space} Acronis True Image PE
-  item dellima         ${space} Dell Image Assist
+	item acronis         ${space} Acronis True Image
+	item gparted         ${space} Gparted Live (Partition Manager)
+	item nixos-disk-destroyer ${space} Disk Destroyer
+	item nixos-hardware  ${space} Hardware Tester
 	item clonezilla      ${space} Clonezilla Live
-	item rescuezilla     ${space} Rescuezilla
-	item kali            ${space} Kali Linux
-  item sergei	     ${space} Sergei Strelec Boot CD (Ignazio)	 
+	item netbootxyz      ${space} Internet Images - Netboot XYZ
 	item localboot	     ${space} Boot from local storage
 item --gap --            --------------------------------------------- Altro: --------------------------------------------
 	item view            ${space} Network setting
@@ -57,14 +47,21 @@ goto start-menu
 :acronis
 sanboot --no-describe http://192.168.55.252:9080/pxe-server/images/acronispe.iso || goto failed
 
-:dellima
-sanboot --no-describe http://192.168.55.252:9080/pxe-server/images/dellima.iso || goto failed
+:gparted
+kernel http://192.168.55.252:9080/pxe-server/images/gparted/live/vmlinuz boot=live config components locales=it_IT.UTF-8 keyboard-layouts=it username=user union=overlay noswap noeject vga=788 fetch=http://192.168.55.252:9080/pxe-server/images/gparted/live/filesystem.squashfs gparted_mode=0 
+initrd http://192.168.55.252:9080/pxe-server/images/gparted/live/initrd.img 
+boot || goto failed
 
-:rescuezilla
-kernel http://192.168.55.252:9080/pxe-server/images/rescuezilla/vmlinuz
-initrd http://192.168.55.252:9080/pxe-server/images/rescuezilla/initrd.lz
-imgargs vmlinuz boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" keyboard-layouts= ocs_live_batch="no" locales=it_IT.UTF-8 vga=788 nosplash noprompt fetch=http://192.168.55.252:9080/pxe-server/images/rescuezilla/filesystem.squashfs
+:nixos-disk-destroyer
+kernel http://192.168.55.252:9080/pxe-server/images/nixos-disk-destroyer/bzImage init=/nix/store/b84kr2czivcv56krfyqikbxh1swy81xj-nixos-system-nixos-disk-destroyer-24.11beta708350.1d95cb5/init initrd=initrd nohibernate loglevel=4 ${cmdline}
+initrd http://192.168.55.252:9080/pxe-server/images/nixos-disk-destroyer/initrd
 boot
+
+:nixos-hardware
+set nixos_url http://192.168.55.252:9080/pxe-server/images/nixos-hardware-tester/nixos-hardware.iso
+kernel ${nixos_url}/boot/bzImage  
+initrd ${nixos_url}/boot/initrd
+boot || goto failed
 
 :clonezilla
 kernel http://192.168.55.252:9080/pxe-server/images/clonezilla/vmlinuz
@@ -72,16 +69,8 @@ initrd http://192.168.55.252:9080/pxe-server/images/clonezilla/initrd.img
 imgargs vmlinuz boot=live config noswap nolocales edd=on nomodeset ocs_live_run="ocs-live-general" ocs_live_extra_param="" keyboard-layouts= ocs_live_batch="no" locales=it_IT.UTF-8 vga=788 nosplash noprompt fetch=http://192.168.55.252:9080/pxe-server/images/clonezilla/filesystem.squashfs
 boot
 
-:kali
-kernel http://192.168.55.252:9080/pxe-server/images/kali/vmlinuz
-initrd http://192.168.55.252:9080/pxe-server/images/kali/initrd.img
-imgargs fetch=http://192.168.55.252:9080/pxe-server/images/kali/filesystem.squashfs
-boot
-
-:sergei
-kernel http://192.168.55.252/wimboot
-initrd http://192.168.55.252/pxe-server/images/strelec/SSTR/strelec11x64Eng.wim  strelec11x64Eng.wim  
-boot
+:netbootxyz
+chain --autofree http://boot.netboot.xyz/ipxe/netboot.xyz.efi
 
 :view
 isset ${memsize} && echo ${manufacturer} | ${product} | ${platform} | ${arch} | ${memsize} MiB || echo ${manufacturer} | ${product} | ${platform} | ${arch}
